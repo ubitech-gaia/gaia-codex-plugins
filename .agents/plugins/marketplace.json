@@ -1,0 +1,20 @@
+{
+  "name": "gaia",
+  "interface": {
+    "displayName": "Gaia"
+  },
+  "plugins": [
+    {
+      "name": "gaia-codex",
+      "source": {
+        "source": "local",
+        "path": "./plugins/gaia-codex"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

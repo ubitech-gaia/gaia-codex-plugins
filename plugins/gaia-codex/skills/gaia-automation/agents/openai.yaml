@@ -1,0 +1,15 @@
+interface:
+  display_name: 'Gaia Automation'
+  short_description: 'Work on a bound Gaia project through OAuth-backed Gaia MCP'
+  icon_small: 'assets/gaia-codex-icon.svg'
+  icon_large: 'assets/gaia-codex-logo.svg'
+  brand_color: '#2563EB'
+  default_prompt: 'Use $gaia-automation from a repository that is bound to one Gaia project through gaia.config.json. Read gaia.config.json first. Use gaia-project at /api/mcp/gaia?projectId=<project-id>&tools=all, authenticated with codex mcp login gaia-project. Never print or commit values from local .env or .codex/config.toml.'
+
+dependencies:
+  tools:
+    - type: 'mcp'
+      value: 'gaia-project'
+      description: 'Project-bound Gaia MCP endpoint with tools=all for full project-scoped operations'
+      transport: 'streamable_http'
+      url: 'https://thegaia.ai/api/mcp/gaia?projectId=your-gaia-project-id&tools=all'
