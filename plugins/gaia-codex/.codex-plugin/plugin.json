@@ -1,7 +1,7 @@
 {
   "name": "gaia-codex",
-  "version": "0.1.0",
-  "description": "Use Codex with Gaia project-bound MCP, OAuth login, and live project patch discipline.",
+  "version": "0.2.1",
+  "description": "Use Codex with Gaia project-bound MCP, OAuth login, live project patch discipline, and workflow test tooling.",
   "author": {
     "name": "Ubitech",
     "url": "https://thegaia.ai"
@@ -13,7 +13,7 @@
   "interface": {
     "displayName": "Gaia Codex",
     "shortDescription": "Work on Gaia projects from Codex through OAuth-backed MCP.",
-    "longDescription": "Gaia Codex gives Codex a reusable workflow for project-bound Gaia MCP. It helps Codex read the bound project, preview patches, use project-scoped tools, and keep live Gaia changes tied to the intended project.",
+    "longDescription": "Gaia Codex gives Codex a reusable workflow for project-bound Gaia MCP. It helps Codex read the bound project, preview patches, test workflows with seeded inputs and human-in-the-loop action requests, use project-scoped tools, and keep live Gaia changes tied to the intended project.",
     "developerName": "Ubitech",
     "category": "Productivity",
     "capabilities": ["Interactive", "MCP", "Write"],
