@@ -4,7 +4,7 @@ interface:
   icon_small: 'assets/gaia-codex-icon.svg'
   icon_large: 'assets/gaia-codex-logo.svg'
   brand_color: '#2563EB'
-  default_prompt: 'Use $gaia-automation from a repository that is bound to one Gaia project through gaia.config.json. Read gaia.config.json first. Use gaia at /api/mcp/gaia?tools=all for project spec, evals, delivery process, tasks, milestones, versions, branches, environment promotion, governance, workflows, workflow runs, human-in-the-loop action requests, document folders, UI layouts, and agent/config operations, and pass the configured projectId to every Gaia tool call. Never print or commit values from local .env or .codex/config.toml.'
+  default_prompt: 'Use $gaia-automation from a repository that is bound to one default Gaia project through gaia.config.json. Read gaia.config.json first. Use gaia at /api/mcp/gaia?tools=all by default for project spec, evals, delivery process, tasks, milestones, versions, branches, environment promotion, governance, workflows, workflow runs, human-in-the-loop action requests, document folders, UI layouts, and agent/config operations, and pass projectId to every Gaia tool call. Only use gaia-local at https://gaia.localhost:1443 when the user explicitly asks for the local Gaia server and gaia.config.json has a non-empty localProjectId; then pass localProjectId instead. Never print or commit values from local .env or .codex/config.toml.'
 
 dependencies:
   tools:

@@ -9,33 +9,41 @@ Use this skill from a project-specific repository, not from the Gaia application
 
 ## Preconditions
 
-- The project repository is bound to one Gaia project through a root-level `gaia.config.json` file.
+- The project repository is bound to one default Gaia project through a root-level `gaia.config.json` file.
 - The repository has access to one global OAuth-backed MCP server named `gaia` for `/api/mcp/gaia?tools=all`. This server should expose Project Spec Operations plus evals, delivery process, project tasks, milestones, project versions, branches, environment promotion, agent/config operations, data model, document folders, governance, workflows, UI layouts, and other project-scoped Gaia tools.
 - Prefer OAuth for Codex. `codex mcp add gaia --url "https://thegaia.ai/api/mcp/gaia?tools=all"` starts the OAuth flow when Gaia advertises OAuth support. Use project-bound service-account keys only for legacy clients or non-interactive setups that cannot use OAuth.
-- The Gaia MCP endpoint `/api/mcp/gaia?tools=all` is the default Codex route; each Gaia tool call must include the `projectId` from `gaia.config.json`.
+- The Gaia MCP endpoint `/api/mcp/gaia?tools=all` is the default Codex route; each Gaia tool call must include the active project id selected from `gaia.config.json`.
+- Gaia maintainers may also configure a local Gaia server with `localGaiaBaseUrl` and `localProjectId` in `gaia.config.json`, plus an MCP server named `gaia-local` pointing at `https://gaia.localhost:1443/api/mcp/gaia?tools=all`. Use this local target only when the user explicitly asks to work against the local Gaia server and `localProjectId` is present and non-empty.
 - Local CLI credentials or fallback config may live in `.env` or `.codex/config.toml`. Treat both files as secret-capable local material and never print or commit their values.
 
 ## Setup Check
 
 Before using Gaia MCP tools:
 
-1. Read `gaia.config.json` and treat its `projectId` and `gaiaBaseUrl` as the authoritative target.
-2. Confirm the MCP server is named `gaia` and points at `${gaiaBaseUrl}/api/mcp/gaia?tools=all`.
-3. If MCP is not connected, tell the user to run:
+1. Read `gaia.config.json` and select the active target. Use default `gaiaBaseUrl`, `projectId`, and the `gaia` MCP server unless the user explicitly asks for the local Gaia server.
+2. For local Gaia server work, require a non-empty `localProjectId`, use `localGaiaBaseUrl` when present and non-empty or `https://gaia.localhost:1443`, and use the `gaia-local` MCP server. If `localProjectId` is missing or empty, stop and ask the user to add it to `gaia.config.json`; do not fall back to the default `projectId`.
+3. Confirm the active MCP server points at `${activeGaiaBaseUrl}/api/mcp/gaia?tools=all`.
+4. If MCP is not connected, tell the user to run:
 
 ```bash
 codex mcp add gaia --url "https://thegaia.ai/api/mcp/gaia?tools=all"
 ```
 
+For local Gaia server work, tell maintainers to run:
+
+```bash
+codex mcp add gaia-local --url "https://gaia.localhost:1443/api/mcp/gaia?tools=all"
+```
+
 If the user previously configured the older `gaia-project` server, tell them to remove it separately with `codex mcp remove gaia-project`. If the `gaia` server already exists and only needs a refreshed OAuth grant, tell them to run `codex mcp login gaia`. A successful Gaia Codex OAuth login is intended to stay usable for about 30 days before another login is required.
 
-Use the actual `gaiaBaseUrl` from `gaia.config.json`.
+Use the actual active Gaia base URL from `gaia.config.json`.
 
 ## Freshness and Patch Base Discipline
 
 Treat the live Gaia project spec as authoritative and every repo export as a cache.
 
-- Before drafting, editing, previewing, or applying any patch, call `project_spec_get_current` through the `gaia` MCP server with the `projectId` in `gaia.config.json`.
+- Before drafting, editing, previewing, or applying any patch, call `project_spec_get_current` through the active MCP server with the active project id selected from `gaia.config.json`.
 - Compare the live spec to `gaia/current-export.json` before trusting local patches. At minimum compare `project.id`, `version`, `exportedAt` when present, and a SHA-256 hash of the canonical JSON payload.
 - If the live spec differs from `gaia/current-export.json`, stop and either refresh `gaia/current-export.json` from the live spec or explicitly mark the existing patch set as stale and rebase it.
 - Generate RFC 6902 patches against the exact live export or refreshed local export you just inspected. Include `test` operations for the project id and the strongest available base markers.
@@ -44,17 +52,18 @@ Treat the live Gaia project spec as authoritative and every repo export as a cac
 
 ## Workflow
 
-1. Read `gaia.config.json` if it exists and treat that `projectId` as the authoritative target.
-2. Use the `gaia` server to call `project_spec_get_current` with the configured `projectId` and establish the current live export hash before drafting or applying any patch.
+1. Read `gaia.config.json` if it exists and select the active target. Use default `projectId` unless the user explicitly asks for the local Gaia server and `localProjectId` is present.
+2. Use the active MCP server to call `project_spec_get_current` with the selected project id and establish the current live export hash before drafting or applying any patch.
 3. Rebase or refresh local patch files when the live export and `gaia/current-export.json` differ.
 4. Preview live project changes with `project_spec_patch_preview` before any apply step.
-5. Keep every preview and apply action scoped to the same bound `projectId`.
+5. Keep every preview and apply action scoped to the same active project id.
 6. Use `project_spec_plan_migration` and `project_spec_apply_migration` only when the task explicitly calls for live project changes.
 7. Use `gaia_mcp_skill_catalog` to understand available project-scoped tool groups.
-8. For evals, delivery process, project tasks, milestones, project versions, branches, environment promotion, governance, document folders, workflows, UI layouts, and agent/config operations, use the native tools exposed by the same `gaia` server whenever they are available, always passing the configured `projectId`.
+8. For evals, delivery process, project tasks, milestones, project versions, branches, environment promotion, governance, document folders, workflows, UI layouts, and agent/config operations, use the native tools exposed by the active MCP server whenever they are available, always passing the active project id.
 9. For workflow end-to-end checks, prefer `workflow_run_with_context_seed` when the workflow expects assistant/tool input. Inspect results with `workflow_run_get`, `workflow_run_logs_get`, and `workflow_action_request_list`; use `workflow_action_request_ui_layout_get` to verify custom human-in-the-loop layouts.
 10. If only `project_spec_*` tools are visible in Codex, treat the MCP binding as incomplete: update the server URL to include `tools=all` and restart/reload the Codex session.
 11. Use Browser or Playwright tools for UI and canvas interactions when needed.
+12. For production support and debugging, call `read_operational_logs` with the active project id, the user's IANA `timeZone`, and either `latestMinutes`/`latestHours` or a `start` and `end` window. Offset-free date-times are interpreted in the supplied time zone.
 
 ## Tool Notes
 
@@ -69,6 +78,7 @@ Treat the live Gaia project spec as authoritative and every repo export as a cac
 - `workflow_run_with_context_seed` starts or synchronously executes workflows with a seeded context payload. A `paused` result is expected evidence for human-in-the-loop workflows.
 - `workflow_run_get`, `workflow_run_list`, and `workflow_run_logs_get` inspect run status and logs without relying on an authenticated browser session.
 - `workflow_action_request_*` tools list, inspect, claim, resolve, and verify UI layout data for human-in-the-loop workflow nodes.
+- `read_operational_logs` returns recent platform warning/error/fatal entries for the project, including resolved project/conversation/user names where available.
 - Generate RFC 6902 patches against the actual live project spec or exported payload you are inspecting. Do not invent target paths from memory.
 
 ## Browser Canvas Checks

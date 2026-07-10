@@ -1,6 +1,6 @@
 {
   "name": "gaia-codex",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Use Codex with Gaia project-bound MCP, OAuth login, live project patch discipline, and workflow test tooling.",
   "author": {
     "name": "Ubitech",
