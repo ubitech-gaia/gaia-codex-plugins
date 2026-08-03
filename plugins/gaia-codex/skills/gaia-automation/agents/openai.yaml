@@ -1,15 +1,15 @@
 interface:
   display_name: 'Gaia Automation'
-  short_description: 'Work on a bound Gaia project through OAuth-backed Gaia MCP'
+  short_description: 'Use live Gaia tools with or without a project binding'
   icon_small: 'assets/gaia-codex-icon.svg'
   icon_large: 'assets/gaia-codex-logo.svg'
   brand_color: '#2563EB'
-  default_prompt: 'Use $gaia-automation from a repository that is bound to one default Gaia project through gaia.config.json. Read gaia.config.json first. Use gaia at /api/mcp/gaia?tools=all by default for project spec, evals, delivery process, tasks, milestones, versions, branches, environment promotion, governance, workflows, workflow runs, human-in-the-loop action requests, document folders, UI layouts, and agent/config operations, and pass projectId to every Gaia tool call. Only use gaia-local at https://gaia.localhost:1443 when the user explicitly asks for the local Gaia server and gaia.config.json has a non-empty localProjectId; then pass localProjectId instead. Never print or commit values from local .env or .codex/config.toml.'
+  default_prompt: 'Use $gaia-automation for live Gaia work through the Gaia extension. If gaia.config.json exists, use its default projectId for project-scoped tools and preserve the project patch discipline. If it is absent, do not stop: use the extension-provided gaia MCP for general/platform tools whose inputs are available from the request or trusted Gaia context. For discussion URLs or topic ids, try discussion_topic_get with comments before browser login or direct database access. Never invent a projectId. Only use gaia-local when the user explicitly asks for the local Gaia server and gaia.config.json has a non-empty localProjectId. Never print or commit values from local .env or .codex/config.toml.'
 
 dependencies:
   tools:
     - type: 'mcp'
       value: 'gaia'
-      description: 'OAuth-backed Gaia MCP endpoint with tools=all; Gaia tool calls include projectId from gaia.config.json'
+      description: 'OAuth-backed Gaia MCP endpoint with tools=all for general operations and project-bound work'
       transport: 'streamable_http'
       url: 'https://thegaia.ai/api/mcp/gaia?tools=all'

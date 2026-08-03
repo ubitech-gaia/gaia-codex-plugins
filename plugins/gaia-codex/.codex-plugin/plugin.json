@@ -1,7 +1,7 @@
 {
   "name": "gaia-codex",
-  "version": "0.2.2",
-  "description": "Use Codex with Gaia project-bound MCP, OAuth login, live project patch discipline, and workflow test tooling.",
+  "version": "0.2.3",
+  "description": "Use Codex with OAuth-backed Gaia MCP for general platform operations and project-bound workflows.",
   "author": {
     "name": "Ubitech",
     "url": "https://thegaia.ai"
@@ -12,8 +12,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Gaia Codex",
-    "shortDescription": "Work on Gaia projects from Codex through OAuth-backed MCP.",
-    "longDescription": "Gaia Codex gives Codex a reusable workflow for project-bound Gaia MCP. It helps Codex read the bound project, preview patches, test workflows with seeded inputs and human-in-the-loop action requests, use project-scoped tools, and keep live Gaia changes tied to the intended project.",
+    "shortDescription": "Use live Gaia tools and project workflows from Codex.",
+    "longDescription": "Gaia Codex gives Codex a reusable workflow for OAuth-backed Gaia MCP. It supports general platform operations such as discussion investigations even when a repository has no Gaia project binding, while keeping project-scoped reads, patches, workflow tests, and live changes tied to an explicit project.",
     "developerName": "Ubitech",
     "category": "Productivity",
     "capabilities": ["Interactive", "MCP", "Write"],
@@ -23,6 +23,7 @@
     "logo": "./assets/gaia-codex-logo.svg",
     "defaultPrompt": [
       "Connect this repository to its Gaia project.",
+      "Investigate this Gaia discussion through the Gaia MCP tools.",
       "Read the live Gaia project spec and compare it with my export.",
       "Preview a Gaia project patch before applying it."
     ]
