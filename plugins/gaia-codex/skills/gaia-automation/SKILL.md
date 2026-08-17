@@ -40,7 +40,7 @@ For local Gaia server work, tell maintainers to run:
 codex mcp add gaia-local --url "https://gaia.localhost:1443/api/mcp/gaia?tools=all"
 ```
 
-If the user previously configured the older `gaia-project` server, tell them to remove it separately with `codex mcp remove gaia-project`. If the `gaia` server already exists and only needs a refreshed OAuth grant, tell them to run `codex mcp login gaia`. A successful Gaia Codex OAuth login is intended to stay usable for about 30 days before another login is required.
+If the user previously configured the older `gaia-project` server, tell them to remove it separately with `codex mcp remove gaia-project`. If the `gaia` server already exists and only needs a refreshed OAuth grant, tell them to run `codex mcp login gaia`. A successful Gaia Codex OAuth login uses short-lived access tokens with a rolling 30-day refresh window, so active Codex sessions should renew silently. Another login is expected only after prolonged inactivity, explicit revocation, or account/client disablement.
 
 Use the actual active Gaia base URL from `gaia.config.json` in bound-project mode. In unbound general mode, use the Gaia extension's configured `gaia` server.
 

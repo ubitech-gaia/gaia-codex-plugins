@@ -1,6 +1,6 @@
 {
   "name": "gaia-codex",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Use Codex with OAuth-backed Gaia MCP for general platform operations and project-bound workflows.",
   "author": {
     "name": "Ubitech",
@@ -24,7 +24,6 @@
     "defaultPrompt": [
       "Connect this repository to its Gaia project.",
       "Investigate this Gaia discussion through the Gaia MCP tools.",
-      "Read the live Gaia project spec and compare it with my export.",
       "Preview a Gaia project patch before applying it."
     ]
   }
