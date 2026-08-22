@@ -4,7 +4,7 @@ interface:
   icon_small: 'assets/gaia-codex-icon.svg'
   icon_large: 'assets/gaia-codex-logo.svg'
   brand_color: '#2563EB'
-  default_prompt: 'Use $gaia-automation for live Gaia work through the Gaia extension. If gaia.config.json exists, use its default projectId for project-scoped tools and preserve the project patch discipline. If it is absent, do not stop: use the extension-provided gaia MCP for general/platform tools whose inputs are available from the request or trusted Gaia context. For discussion URLs or topic ids, try discussion_topic_get with comments before browser login or direct database access. Never invent a projectId. Only use gaia-local when the user explicitly asks for the local Gaia server and gaia.config.json has a non-empty localProjectId. Never print or commit values from local .env or .codex/config.toml.'
+  default_prompt: 'Use $gaia-automation for live Gaia work through the Gaia extension. If gaia.config.json exists, use its default projectId for project-scoped tools and preserve the project patch discipline. If it is absent, do not stop: use the extension-provided gaia MCP for general/platform tools whose inputs are available from the request or trusted Gaia context. For discussion URLs or topic ids, try discussion_topic_get with comments before browser login or direct database access. Treat Gaia OAuth failures as recoverable: refresh an existing server with codex mcp login gaia, then retry the original call once before reporting a blocker. Never invent a projectId. Only use gaia-local when the user explicitly asks for the local Gaia server and gaia.config.json has a non-empty localProjectId. Never print or commit values from local .env or .codex/config.toml.'
 
 dependencies:
   tools:

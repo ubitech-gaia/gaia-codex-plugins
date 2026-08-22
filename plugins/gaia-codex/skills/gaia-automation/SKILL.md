@@ -40,9 +40,19 @@ For local Gaia server work, tell maintainers to run:
 codex mcp add gaia-local --url "https://gaia.localhost:1443/api/mcp/gaia?tools=all"
 ```
 
-If the user previously configured the older `gaia-project` server, tell them to remove it separately with `codex mcp remove gaia-project`. If the `gaia` server already exists and only needs a refreshed OAuth grant, tell them to run `codex mcp login gaia`. A successful Gaia Codex OAuth login uses short-lived access tokens with a rolling 30-day refresh window, so active Codex sessions should renew silently. Another login is expected only after prolonged inactivity, explicit revocation, or account/client disablement.
+If the user previously configured the older `gaia-project` server, tell them to remove it separately with `codex mcp remove gaia-project`. A successful Gaia Codex OAuth login uses 24-hour access tokens and a rolling 90-day refresh window, so active Codex sessions should renew silently. Another login is expected only after 90 days without a successful refresh, explicit revocation, or account/client disablement.
 
 Use the actual active Gaia base URL from `gaia.config.json` in bound-project mode. In unbound general mode, use the Gaia extension's configured `gaia` server.
+
+## Connection Recovery
+
+Treat an OAuth challenge, `401`, `invalid_grant`, or an unavailable Gaia tool catalogue as a recoverable authentication event before describing the Gaia connection as lost.
+
+1. Run `codex mcp get gaia` to confirm the existing server configuration. Do not remove a correctly configured server as the first recovery step.
+2. If the server exists, run `codex mcp login gaia`, tell the user that Gaia browser approval is needed, and wait for that login flow to finish. If shell execution is unavailable, give the user that exact command instead.
+3. After a successful login, retry the original Gaia MCP call once in the same task. Codex 0.148.0 and newer can recover the MCP server after OAuth reauthentication without restarting. If the installed Codex is older, recommend upgrading; when the current task still retains the stale connection, ask the user to start a new task after login.
+4. Use `codex mcp add gaia --url "https://thegaia.ai/api/mcp/gaia?tools=all"` only when the `gaia` server is missing or its URL is incorrect.
+5. If the retry fails with the same authentication error, report the exact failed recovery step and required user action. Do not fall back to browser scraping or direct database access for data the Gaia MCP should provide.
 
 ## Freshness and Patch Base Discipline
 

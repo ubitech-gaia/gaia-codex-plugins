@@ -1,6 +1,6 @@
 {
   "name": "gaia-codex",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Use Codex with OAuth-backed Gaia MCP for general platform operations and project-bound workflows.",
   "author": {
     "name": "Ubitech",
