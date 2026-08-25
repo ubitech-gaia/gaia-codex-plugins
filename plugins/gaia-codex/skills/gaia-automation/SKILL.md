@@ -11,10 +11,10 @@ Use this skill whenever Codex needs live Gaia data or actions through the Gaia e
 
 - **Bound-project mode:** A root-level `gaia.config.json` selects one default Gaia project. Use this mode for project specs, patches, migrations, project-scoped resources, operational logs, and other calls that require a project id.
 - **Unbound general mode:** When `gaia.config.json` is absent, do not stop solely because the repository lacks a binding. Use the Gaia extension's OAuth-backed `gaia` MCP for general or platform operations whose required inputs are available from the request, the URL, trusted repository context, or earlier Gaia MCP results. Discussion lookup is a primary example.
-- The Gaia extension provides the global OAuth-backed MCP server named `gaia` for `/api/mcp/gaia?tools=all`. It should expose Project Spec Operations plus discussions, evals, delivery process, project tasks, milestones, project versions, branches, environment promotion, agent/config operations, data model, document folders, governance, workflows, UI layouts, and other Gaia tools.
-- Prefer OAuth for Codex. `codex mcp add gaia --url "https://thegaia.ai/api/mcp/gaia?tools=all"` starts the OAuth flow when Gaia advertises OAuth support. Use project-bound service-account keys only for legacy clients or non-interactive setups that cannot use OAuth.
-- The Gaia MCP endpoint `/api/mcp/gaia?tools=all` is the default Codex route. Pass a project id when the exposed tool schema requires one, but only when it comes from `gaia.config.json`, an explicit user-provided value, a trusted Gaia URL/context, or a Gaia MCP result. Never invent a project id or substitute an unrelated project binding.
-- Gaia maintainers may also configure a local Gaia server with `localGaiaBaseUrl` and `localProjectId` in `gaia.config.json`, plus an MCP server named `gaia-local` pointing at `https://gaia.localhost:1443/api/mcp/gaia?tools=all`. Use this local target only when the user explicitly asks to work against the local Gaia server and `localProjectId` is present and non-empty.
+- The Gaia extension provides the global OAuth-backed MCP server named `gaia` for the canonical queryless endpoint `/api/mcp/gaia`. It exposes Project Spec Operations plus discussions, evals, delivery process, project tasks, milestones, project versions, branches, environment promotion, agent/config operations, data model, document folders, governance, workflows, UI layouts, and other Gaia tools.
+- Prefer OAuth for Codex. `codex mcp add gaia --url "https://thegaia.ai/api/mcp/gaia"` starts the OAuth flow when Gaia advertises OAuth support. Use project-bound service-account keys only for legacy clients or non-interactive setups that cannot use OAuth.
+- The Gaia MCP endpoint `/api/mcp/gaia` is the default Codex route. Do not append legacy tool-selection query parameters such as `tools=all`; the queryless endpoint exposes the complete supported tool catalogue and must match Gaia's protected-resource metadata exactly. Pass a project id when the exposed tool schema requires one, but only when it comes from `gaia.config.json`, an explicit user-provided value, a trusted Gaia URL/context, or a Gaia MCP result. Never invent a project id or substitute an unrelated project binding.
+- Gaia maintainers may also configure a local Gaia server with `localGaiaBaseUrl` and `localProjectId` in `gaia.config.json`, plus an MCP server named `gaia-local` pointing at `https://gaia.localhost:1443/api/mcp/gaia`. Use this local target only when the user explicitly asks to work against the local Gaia server and `localProjectId` is present and non-empty.
 - Local CLI credentials or fallback config may live in `.env` or `.codex/config.toml`. Treat both files as secret-capable local material and never print or commit their values.
 
 ## Setup Check
@@ -27,17 +27,17 @@ Before using Gaia MCP tools:
 4. For a discussion URL or topic id, call `discussion_topic_get` with the extracted `topicId` and include comments when supported. For discussion discovery, use `discussion_topic_list` with the appropriate global/platform scope. Do this before treating authentication in a browser as the only access path.
 5. In unbound general mode, use `gaia_mcp_skill_catalog` or `gaia_capability_inventory_get` when available to discover the native tool. If its schema still requires a project id, use only a trusted id already present in the request or returned by Gaia; otherwise report that specific scoped requirement after general Gaia tools have been exhausted.
 6. For local Gaia server work, require a non-empty `localProjectId`, use `localGaiaBaseUrl` when present and non-empty or `https://gaia.localhost:1443`, and use the `gaia-local` MCP server. If `localProjectId` is missing or empty, stop and ask the user to add it to `gaia.config.json`; do not fall back to the default `projectId`.
-7. Confirm the selected MCP server points at the matching `/api/mcp/gaia?tools=all` endpoint.
+7. Confirm the selected MCP server points at the matching queryless `/api/mcp/gaia` endpoint.
 8. If MCP is not connected, tell the user to run:
 
 ```bash
-codex mcp add gaia --url "https://thegaia.ai/api/mcp/gaia?tools=all"
+codex mcp add gaia --url "https://thegaia.ai/api/mcp/gaia"
 ```
 
 For local Gaia server work, tell maintainers to run:
 
 ```bash
-codex mcp add gaia-local --url "https://gaia.localhost:1443/api/mcp/gaia?tools=all"
+codex mcp add gaia-local --url "https://gaia.localhost:1443/api/mcp/gaia"
 ```
 
 If the user previously configured the older `gaia-project` server, tell them to remove it separately with `codex mcp remove gaia-project`. A successful Gaia Codex OAuth login uses 24-hour access tokens and a rolling 90-day refresh window, so active Codex sessions should renew silently. Another login is expected only after 90 days without a successful refresh, explicit revocation, or account/client disablement.
@@ -51,7 +51,7 @@ Treat an OAuth challenge, `401`, `invalid_grant`, or an unavailable Gaia tool ca
 1. Run `codex mcp get gaia` to confirm the existing server configuration. Do not remove a correctly configured server as the first recovery step.
 2. If the server exists, run `codex mcp login gaia`, tell the user that Gaia browser approval is needed, and wait for that login flow to finish. If shell execution is unavailable, give the user that exact command instead.
 3. After a successful login, retry the original Gaia MCP call once in the same task. Codex 0.148.0 and newer can recover the MCP server after OAuth reauthentication without restarting. If the installed Codex is older, recommend upgrading; when the current task still retains the stale connection, ask the user to start a new task after login.
-4. Use `codex mcp add gaia --url "https://thegaia.ai/api/mcp/gaia?tools=all"` only when the `gaia` server is missing or its URL is incorrect.
+4. Use `codex mcp add gaia --url "https://thegaia.ai/api/mcp/gaia"` only when the `gaia` server is missing or its URL is incorrect.
 5. If the retry fails with the same authentication error, report the exact failed recovery step and required user action. Do not fall back to browser scraping or direct database access for data the Gaia MCP should provide.
 
 ## Freshness and Patch Base Discipline
@@ -76,7 +76,7 @@ Treat the live Gaia project spec as authoritative and every repo export as a cac
 7. Use `gaia_mcp_skill_catalog` to understand available tool groups in either mode.
 8. For evals, delivery process, project tasks, milestones, project versions, branches, environment promotion, governance, document folders, workflows, UI layouts, and agent/config operations, use the native tools exposed by the selected server whenever they are available. Pass the active project id for project-scoped tools.
 9. For workflow end-to-end checks, prefer `workflow_run_with_context_seed` when the workflow expects assistant/tool input. Inspect results with `workflow_run_get`, `workflow_run_logs_get`, and `workflow_action_request_list`; use `workflow_action_request_ui_layout_get` to verify custom human-in-the-loop layouts.
-10. If only `project_spec_*` tools are visible in Codex, treat the MCP binding as incomplete: update the server URL to include `tools=all` and restart/reload the Codex session.
+10. If only `project_spec_*` tools are visible in Codex, treat the MCP binding as stale or incomplete: confirm that the server uses the queryless `/api/mcp/gaia` URL, refresh OAuth with `codex mcp login gaia`, and retry the catalogue once before reporting the remaining mismatch.
 11. Use Browser or Playwright tools for UI and canvas interactions when needed, after trying the native Gaia MCP operation for semantic reads.
 12. For production support and debugging, call `read_operational_logs` with a trusted active project id, the user's IANA `timeZone`, and either `latestMinutes`/`latestHours` or a `start` and `end` window. Offset-free date-times are interpreted in the supplied time zone.
 

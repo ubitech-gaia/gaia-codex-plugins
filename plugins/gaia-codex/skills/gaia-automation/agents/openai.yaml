@@ -10,6 +10,6 @@ dependencies:
   tools:
     - type: 'mcp'
       value: 'gaia'
-      description: 'OAuth-backed Gaia MCP endpoint with tools=all for general operations and project-bound work'
+      description: 'OAuth-backed Gaia MCP endpoint for general operations and project-bound work'
       transport: 'streamable_http'
-      url: 'https://thegaia.ai/api/mcp/gaia?tools=all'
+      url: 'https://thegaia.ai/api/mcp/gaia'
