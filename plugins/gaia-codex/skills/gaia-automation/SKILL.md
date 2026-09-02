@@ -67,6 +67,10 @@ Treat the live Gaia project spec as authoritative and every repo export as a cac
 
 ## Workflow
 
+When the user asks to update, sync, refresh, adopt, or reconcile the repository's Gaia Codex
+integration files, switch to the `$gaia-workspace-update` skill. Do not treat that maintenance task
+as a project-spec update.
+
 1. Detect bound-project or unbound general mode from the presence of `gaia.config.json`.
 2. In unbound general mode, try the Gaia extension's native general/platform tool first. For discussions, use `discussion_topic_get` or `discussion_topic_list`; do not begin with browser login or direct database access.
 3. In bound-project mode, call `project_spec_get_current` with the selected project id and establish the current live export hash before drafting or applying any patch.
@@ -83,6 +87,8 @@ Treat the live Gaia project spec as authoritative and every repo export as a cac
 ## Tool Notes
 
 - `project_spec_get_current` returns the canonical spec for the bound live project.
+- `codex_workspace_template_get` returns the versioned, read-only payload used by
+  `$gaia-workspace-update`; it does not modify the Gaia project or local workspace.
 - `project_spec_patch_preview` accepts an RFC 6902 operation array or a merge-style project-spec patch object.
 - `project_spec_draft` can build a desired spec from a partial draft, but prefer RFC 6902 patch previews for assistant-authored changes unless the user explicitly asks for a full desired spec.
 - `gaia_mcp_skill_catalog` lists focused Gaia MCP skill slugs, descriptions, and tool groups.
