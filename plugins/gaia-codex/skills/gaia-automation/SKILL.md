@@ -86,6 +86,8 @@ as a project-spec update.
 
 ## Tool Notes
 
+MCP tool schemas come from the connected Gaia server, not this plugin. A server-side tool addition does not require a plugin schema change. After deploying new server capabilities, refresh the MCP connection/catalog (or start a new Codex task) and check the available tools before using them. Updating this plugin supplies workflow guidance; it does not deploy server code or make an unavailable tool callable.
+
 - `project_spec_get_current` returns the canonical spec for the bound live project.
 - `codex_workspace_template_get` returns the versioned, read-only payload used by
   `$gaia-workspace-update`; it does not modify the Gaia project or local workspace.
@@ -103,6 +105,18 @@ as a project-spec update.
 - `workflow_action_request_*` tools list, inspect, claim, resolve, and verify UI layout data for human-in-the-loop workflow nodes.
 - `read_operational_logs` returns recent platform warning/error/fatal entries for the project, including resolved project/conversation/user names where available.
 - Generate RFC 6902 patches against the actual live project spec or exported payload you are inspecting. Do not invent target paths from memory.
+
+## Authorized Development Cleanup
+
+Use this workflow only for explicitly requested cleanup of development outputs. Existing authorization for the same project and exact scope remains valid; do not request it again solely because the connection or tool catalog was refreshed.
+
+1. Inventory exact project-scoped record IDs, artifact IDs, folder memory keys and generated storage paths. Record source uploads and folders/conversations that must survive. Verify all required deletion tools are available before pausing entry points or beginning dependent schema changes.
+2. Use `document_folder_memory_delete` with `folderId`, the exact `key`, and `confirm: true` to remove a legacy memory entry. It requires folder editor access and leaves other keys and folder contents intact. List memories again to verify removal; an absent key is not an instruction to delete the folder.
+3. Use `artifact_delete` with the exact `artifactId` and `confirm: true` to delete canonical content and revisions. It requires project administrator access and refuses active locks. A repeated deletion returns `deleted: false` when the artifact is already absent from that project. It preserves conversations, messages, published folder copies and storage blobs.
+4. Remove separately verified generated copies/blobs with `storage_file_delete` using exact project-relative paths. Folder-file deletion follows Gaia's indexing invalidation path. Never assume `sourceStoragePath` is disposable: it may reference an original upload. Do not replace these operations with folder/conversation deletion or blank memory values.
+5. Verify deletion and preserved source files before replacing dependent schemas. Native `workflow_delete` also removes that workflow's runs and review requests; include these effects in the authorized inventory. If project-spec preview blocks resource removals, use supported native deletions, recapture the live spec, and rebase and preview the remaining patch before applying it.
+
+If these tools are missing, check the deployed server's catalog with `gaia_capability_inventory_get`. A plugin update alone cannot resolve a server capability gap. Report the missing operation and keep existing entry points usable when mandatory cleanup cannot finish.
 
 ## Browser Canvas Checks
 
