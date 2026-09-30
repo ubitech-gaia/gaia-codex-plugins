@@ -1,6 +1,6 @@
 ---
 name: gaia-workspace-update
-description: 'Use when Codex needs to check, adopt, preview, or apply Gaia Codex integration-file updates in an existing project workspace.'
+description: "Use when Codex needs to check, adopt, preview, or apply Gaia Codex integration-file updates in an existing project workspace."
 ---
 
 # Gaia Workspace Update
@@ -15,8 +15,8 @@ Never alter `gaia.config.json`, project source/content, exports, patches, assets
 
 ## Fetch and Validate
 
-1. Work from the repository root and read `gaia.config.json`. Require non-empty `projectId` and `gaiaBaseUrl`; never invent either value.
-2. Call the `gaia` MCP tool `codex_workspace_template_get` with that `projectId` and `gaiaBaseUrl`. This call is read-only. If the tool is unavailable, refresh the Gaia plugin/MCP connection and retry once; otherwise report that the Gaia server must be upgraded before automated reconciliation is available.
+1. Work from the repository root and read `gaia.config.json` if present. Resolve `gaiaBaseUrl` from that file, the user's request, or the configured Gaia MCP endpoint. Require a trusted non-empty base URL; no project binding is needed for template retrieval.
+2. Call the `gaia` MCP tool `codex_workspace_template_get` with `gaiaBaseUrl`, omitting `projectId`. This call is read-only. If the tool is unavailable or still requires a project id, refresh the Gaia plugin/MCP catalog once; otherwise report that the deployed Gaia server must be upgraded before automated reconciliation is available.
 3. Accept only schema version `1`, the exact manifest path `gaia/workspace-template.json`, and relative managed paths that stay inside the workspace. Reject absolute paths, `..` segments, unexpected paths, duplicate paths, or content whose SHA-256 does not equal the returned hash.
 4. Read the local manifest if present. Treat an absent, invalid, or incompatible manifest as **adoption mode**.
 
