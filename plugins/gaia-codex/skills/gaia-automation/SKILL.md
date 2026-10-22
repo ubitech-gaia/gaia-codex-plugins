@@ -1,6 +1,6 @@
 ---
 name: gaia-automation
-description: "Use when Codex needs live Gaia feedback through the Gaia extension, with or without a repository project binding."
+description: 'Use when Codex needs live Gaia feedback through the Gaia extension, with or without a repository project binding.'
 ---
 
 # Gaia Automation
@@ -9,7 +9,7 @@ Use this skill whenever Codex needs live Gaia data or actions through the Gaia e
 
 ## Operating Modes
 
-- **Bound-project mode:** A root-level `gaia.config.json` selects one default Gaia project. Use this mode for project specs, patches, migrations, project-scoped resources, operational logs, and other calls that require a project id.
+- **Bound-project mode:** A root-level `gaia.config.json` selects a default named environment. Each environment has its own Gaia origin, project ID, and MCP server. Legacy flat bindings remain supported. Use this mode for project specs, patches, migrations, project-scoped resources, and operational logs.
 - **Unbound general mode:** When `gaia.config.json` is absent, use the Gaia extension's OAuth-backed `gaia` MCP for platform operations. Omit `projectId`; do not supply a placeholder, empty string, unrelated project, or create configuration just to read platform data. Global discussions and platform tasks are separate from project discussions and project tasks.
 - The Gaia extension provides the global OAuth-backed MCP server named `gaia` for the canonical queryless endpoint `/api/mcp/gaia`. It exposes Project Spec Operations plus discussions, evals, delivery process, project tasks, milestones, project versions, branches, environment promotion, agent/config operations, data model, document folders, governance, workflows, UI layouts, and other Gaia tools.
 - Prefer OAuth for Codex. `codex mcp add gaia --url "https://thegaia.ai/api/mcp/gaia"` starts the OAuth flow when Gaia advertises OAuth support. Use project-bound service-account keys only for legacy clients or non-interactive setups that cannot use OAuth.
@@ -22,11 +22,11 @@ Use this skill whenever Codex needs live Gaia data or actions through the Gaia e
 Before using Gaia MCP tools:
 
 1. Check whether root-level `gaia.config.json` exists.
-2. If it exists, select the bound target. Use default `gaiaBaseUrl`, `projectId`, and the `gaia` MCP server unless the user explicitly asks for the local Gaia server.
+2. If it exists, use the environment resolver below. Honor an explicit environment name; otherwise use its default. Never substitute another target when the selected connection or project binding is missing.
 3. If it does not exist, enter unbound general mode. Use the Gaia extension's `gaia` MCP server and inspect the exposed Gaia tools before trying browser login, direct database access, or asking the user for a project binding.
 4. For a discussion URL or topic id, call `discussion_topic_get` with the extracted `topicId` and `includeComments: true`, omitting `projectId` when no project context is needed. For platform discussion discovery, call `discussion_topic_list` with `scope: "global"`. Project discussion lists use `scope: "project"` (the default) and require a trusted `projectId`.
 5. Call `gaia_mcp_skill_catalog` without `projectId` to discover native tools and inspect `usage.projectOptionalTools`. `gaia_capability_inventory_get` also works without a project. Platform tasks use `platform_task_*` without `projectId`; project tasks use `project_task_*` with the target project's trusted id. Resource-specific permissions apply in both modes.
-6. For local Gaia server work, use `localGaiaBaseUrl` when present and non-empty or `https://gaia.localhost:1443`, and the `gaia-local` MCP server. Require `localProjectId` only for project-scoped work; it may come from configuration or explicit/trusted local Gaia context. Never substitute a production project id.
+6. For named local environments, use the resolved entry. For legacy local work, use `localGaiaBaseUrl` or `https://gaia.localhost:1443`, `localProjectId`, and `gaia-local`. Local platform calls may omit the project ID; project work must have a trusted local project ID.
 7. Confirm the selected MCP server points at the matching queryless `/api/mcp/gaia` endpoint.
 8. If MCP is not connected, tell the user to run:
 
@@ -44,7 +44,73 @@ If the user previously configured the older `gaia-project` server, tell them to 
 
 Use the actual active Gaia base URL from `gaia.config.json` in bound-project mode. In unbound general mode, use the Gaia extension's configured `gaia` server.
 
+## Named Environments and Transfers
+
+Use the bundled `scripts/environments.mjs` resolver (relative to this skill directory), or the
+identical `gaia/environments.mjs` in a generated workspace:
+
+```text
+node <skill-directory>/scripts/environments.mjs gaia.config.json list
+node <skill-directory>/scripts/environments.mjs gaia.config.json resolve customer-uat
+node <skill-directory>/scripts/environments.mjs gaia.config.json transfer local customer-prod
+```
+
+Version 2 config has `schemaVersion: 2`, `defaultEnvironment`, and an `environments` object keyed
+by arbitrary names. Each entry has `kind` (`thegaia`, `local`, or `customer`), optional `stage`,
+`gaiaBaseUrl`, `projectId`, and `mcpServer`. There is no three-environment limit. Legacy top-level
+`projectId`/`gaiaBaseUrl`, `localProjectId`/`localGaiaBaseUrl`, and
+`customerProjectId`/`customerGaiaBaseUrl` normalize without rewriting the config. Named entries
+take precedence over legacy fields. `defaultEnvironment`, then legacy `activeEnvironment` or
+`environment`, select the default. Do not infer which customer environment the user means when
+multiple named targets exist.
+
+The resolver returns only non-secret routing data and a separate `cachePath` per named target.
+Authenticate each distinct configured MCP connection independently. Config entries do not create
+connections. Check the actual endpoint matches the resolved origin plus `/api/mcp/gaia`; use the
+resolved server name in login/setup/recovery commands. Multiple projects on one origin may share
+a server; one server must never route to different origins.
+
+For a cross-environment transfer:
+
+1. Resolve explicit FROM and TO names together. Keep these immutable for the operation; never
+   change the default environment to alternate between endpoints. Verify both deployed catalogs
+   expose the new transfer tools before doing work.
+2. On FROM, fetch the current spec. Call `project_spec_change_export` with its project ID,
+   `sourceEnvironment`, and matching `sourceBaseUrl`. Supply a patch against the current source,
+   or a `baseSnapshotId` from before already-applied changes. With neither, the export includes
+   all configuration resources for initial adoption. Never reapply an old source patch blindly.
+3. Save the returned package unchanged under `gaia-patches/changes/<changeId>.json`. Keep its
+   change ID and hash across dev → UAT → production. The hash verifies content integrity, not
+   source authenticity. Review source provenance using the configured connection.
+4. Relay the package as `changePackage` to `project_spec_transfer_preview` on TO. This uses both
+   client connections and makes no server-to-server request; localhost can remain private.
+5. Inspect `conflicts`, `requiredBindings`, and the migration plan. Supply `keyMap` when logical
+   names differ, and destination `bindings` for new environment-specific values. Existing target
+   values are preserved. Use credential references, never source credential values. Automatic
+   binding detection covers recognized sensitive fields, origins, and unmapped UUID-valued `*Id` fields; known managed resource IDs resolve automatically in the destination. Inline tool and workflow-node IDs remain portable. Use
+   `bindingPaths` on export for custom fields, embedded code, or other deployment-specific data.
+   Do not edit the immutable package to resolve a conflict; create a fresh scoped change or
+   reconcile the destination under the user's authorization and preview again.
+6. Apply a ready `sessionId` with `project_spec_transfer_apply` on TO and `confirm: true` when
+   authorized. A stale destination requires another preview. An already-applied receipt is a
+   no-op, not permission to replay the change under a new ID. Resource removals remain blocked
+   by the project-spec migration engine. Runtime records, uploaded files, and histories are not
+   included in configuration packages.
+7. Fetch TO again, update its resolved cache, and store the receipt under
+   `gaia/environments/<name>/transfers/`. Use `project_spec_transfer_history` to inspect failures
+   or prior applications. The migration engine is multi-step: after failure inspect live state
+   before a new preview. Roll back field changes by exporting the inverse from a saved baseline;
+   newly created resource deletion needs the existing supported deletion workflow.
+
+For later sync requests, read destination history and choose the last applied receipt matching the
+source origin and project. Pass its `source.snapshotId` as the next export's `baseSnapshotId`.
+Exports retain a source snapshot for this purpose. Prospective patch exports capture the state
+before the patch; already-present destination fields are treated as no-ops on later previews.
+Without a retained baseline, preview an initial full export and resolve differences explicitly.
+
 ## Connection Recovery
+
+For named environments, use the resolved `mcpServer` in all connection and recovery commands below. The literal `gaia` examples refer to the legacy default only. Never rewrite a working server to point at another environment.
 
 Treat an OAuth challenge, `401`, `invalid_grant`, or an unavailable Gaia tool catalogue as a recoverable authentication event before describing the Gaia connection as lost.
 
@@ -61,11 +127,11 @@ A `projectId` schema-validation error on a platform tool is a capability mismatc
 Treat the live Gaia project spec as authoritative and every repo export as a cache.
 
 - Before drafting, editing, previewing, or applying any patch, call `project_spec_get_current` through the active MCP server with the active project id selected from `gaia.config.json`.
-- Compare the live spec to `gaia/current-export.json` before trusting local patches. At minimum compare `project.id`, `version`, `exportedAt` when present, and a SHA-256 hash of the canonical JSON payload.
-- If the live spec differs from `gaia/current-export.json`, stop and either refresh `gaia/current-export.json` from the live spec or explicitly mark the existing patch set as stale and rebase it.
-- Generate RFC 6902 patches against the exact live export or refreshed local export you just inspected. Include `test` operations for the project id and the strongest available base markers.
+- Compare the live spec with the resolved environment's `cachePath` before trusting local patches. Compare the spec version and canonical JSON hash, and keep the resolved origin/project ID alongside the cache. The canonical spec itself does not contain a project ID.
+- If the live spec differs, refresh that environment's cache or mark its patch set stale and rebase it. Never load another environment's export as this patch base.
+- Generate RFC 6902 patches against the exact live export you inspected. Include `test` operations only for fields actually present, including the strongest available base markers.
 - Before any live apply, run both checks: apply the patch locally to the same base export, then call `project_spec_patch_preview` against the bound project.
-- After a live apply, call `project_spec_get_current` again, update `gaia/current-export.json`, record the new hash in `notes/session-log.md`, and only then prepare follow-up patches.
+- After a live apply, call `project_spec_get_current` again on the same environment, update its resolved cache, record the new hash in `notes/session-log.md`, and only then prepare follow-up patches.
 
 ## Workflow
 
@@ -76,7 +142,7 @@ as a project-spec update.
 1. Detect bound-project or unbound general mode from the presence of `gaia.config.json`.
 2. In unbound general mode, try the Gaia extension's native platform tool first and omit `projectId`. For discussions, use `discussion_topic_get` or `discussion_topic_list` with `scope: "global"`; for platform tasks, use `platform_task_list` or `platform_task_get`.
 3. In bound-project mode, call `project_spec_get_current` with the selected project id and establish the current live export hash before drafting or applying any patch.
-4. Rebase or refresh local patch files when the live export and `gaia/current-export.json` differ.
+4. Rebase or refresh local patch files when the live export and the resolved environment cache differ.
 5. Preview live project changes with `project_spec_patch_preview` before any apply step and keep every preview and apply scoped to the same active project id.
 6. Use `project_spec_plan_migration` and `project_spec_apply_migration` only when the task explicitly calls for live project changes.
 7. Use `gaia_mcp_skill_catalog` to understand available tool groups in either mode.

@@ -1,6 +1,6 @@
 ---
 name: gaia-workspace-update
-description: "Use when Codex needs to check, adopt, preview, or apply Gaia Codex integration-file updates in an existing project workspace."
+description: 'Use when Codex needs to check, adopt, preview, or apply Gaia Codex integration-file updates in an existing project workspace.'
 ---
 
 # Gaia Workspace Update
@@ -9,14 +9,14 @@ Reconcile the small set of Gaia-managed Codex integration files without replacin
 
 ## Scope
 
-This workflow may manage only the file paths returned by `codex_workspace_template_get`, currently `.codex/config.toml`, `.codex/README.md`, `AGENTS.md`, and `README.md`, plus its manifest at `gaia/workspace-template.json`.
+This workflow may manage only the file paths returned by `codex_workspace_template_get`, currently `.codex/config.toml`, `.codex/README.md`, `AGENTS.md`, `README.md`, and `gaia/environments.mjs`, plus its manifest at `gaia/workspace-template.json`.
 
 Never alter `gaia.config.json`, project source/content, exports, patches, assets, QA evidence, or notes as part of a template update. Never print or copy credentials. Never broaden Gaia tool approvals, change `approvals_reviewer`, or change Codex sandbox/Full Access settings unless the user explicitly requests that separate security change.
 
 ## Fetch and Validate
 
 1. Work from the repository root and read `gaia.config.json` if present. Resolve `gaiaBaseUrl` from that file, the user's request, or the configured Gaia MCP endpoint. Require a trusted non-empty base URL; no project binding is needed for template retrieval.
-2. Call the `gaia` MCP tool `codex_workspace_template_get` with `gaiaBaseUrl`, omitting `projectId`. This call is read-only. If the tool is unavailable or still requires a project id, refresh the Gaia plugin/MCP catalog once; otherwise report that the deployed Gaia server must be upgraded before automated reconciliation is available.
+2. For named configs, use the Gaia automation skill's environment resolver to select the requested/default origin and MCP server. Call that server's `codex_workspace_template_get` with `gaiaBaseUrl`, omitting `projectId`. This call is read-only. Never replace the canonical template's `[mcp_servers.gaia]` over an unrelated connection: merge the selected environment's block under its configured server name, preserving every other environment block. If unavailable, refresh that catalog once before reporting the deployed capability gap.
 3. Accept only schema version `1`, the exact manifest path `gaia/workspace-template.json`, and relative managed paths that stay inside the workspace. Reject absolute paths, `..` segments, unexpected paths, duplicate paths, or content whose SHA-256 does not equal the returned hash.
 4. Read the local manifest if present. Treat an absent, invalid, or incompatible manifest as **adoption mode**.
 
@@ -50,7 +50,7 @@ After all selected file edits succeed, write the returned manifest to `gaia/work
 ## Verify and Report
 
 1. Recompute hashes and confirm every unchanged/replaced file matches its intended content; identify intentionally merged files as locally customized.
-2. Run `codex mcp get gaia` when CLI access is available and confirm the URL ends in `/api/mcp/gaia` without legacy query parameters.
+2. Run `codex mcp get <selected-server>` when CLI access is available and confirm the URL matches the selected origin plus `/api/mcp/gaia` without legacy query parameters.
 3. Report the previous and current template versions, changed/skipped files, preserved customizations, and whether approval behavior changed (normally: no).
 4. Tell the user to start a new Codex task so updated `AGENTS.md`, project config, MCP annotations, and plugin skills are reloaded.
 
