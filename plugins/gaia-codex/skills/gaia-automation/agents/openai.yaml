@@ -4,7 +4,7 @@ interface:
   icon_small: 'assets/gaia-codex-icon.svg'
   icon_large: 'assets/gaia-codex-logo.svg'
   brand_color: '#2563EB'
-  default_prompt: 'Use $gaia-automation for live Gaia work through the Gaia extension. Platform calls need no gaia.config.json: omit projectId, use discussion_topic_list with scope global and discussion_topic_get with comments for platform discussions, and platform_task_* for platform tasks. Project discussions use scope project; project_task_* and other project resources require a trusted projectId from configuration, the request, or Gaia context. Consult gaia_mcp_skill_catalog usage.projectOptionalTools. Preserve project patch discipline and never invent a projectId. A projectId schema error on a platform call requires catalog/server recovery, not repeated OAuth login. For OAuth failures, run codex mcp login gaia and retry once. Use gaia-local only when explicitly requested; local project calls require a trusted local project id, while local platform calls can omit it. Never print or commit secrets.'
+  default_prompt: 'Use $gaia-automation to connect the requested Gaia environments, verify each connection and project binding, and carry out live Gaia work within my requested scope.'
 
 dependencies:
   tools:

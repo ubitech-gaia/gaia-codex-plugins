@@ -9,7 +9,7 @@ Reconcile the small set of Gaia-managed Codex integration files without replacin
 
 ## Scope
 
-This workflow may manage only the file paths returned by `codex_workspace_template_get`, currently `.codex/config.toml`, `.codex/README.md`, `AGENTS.md`, `README.md`, and `gaia/environments.mjs`, plus its manifest at `gaia/workspace-template.json`.
+This workflow may manage only the file paths returned by `codex_workspace_template_get`, currently `.codex/config.toml`, `.codex/README.md`, `AGENTS.md`, `README.md`, `gaia/environments.mjs`, and `gaia/connections.mjs`, plus its manifest at `gaia/workspace-template.json`. Updating the connection helper does not authorize running setup or login.
 
 Never alter `gaia.config.json`, project source/content, exports, patches, assets, QA evidence, or notes as part of a template update. Never print or copy credentials. Never broaden Gaia tool approvals, change `approvals_reviewer`, or change Codex sandbox/Full Access settings unless the user explicitly requests that separate security change.
 

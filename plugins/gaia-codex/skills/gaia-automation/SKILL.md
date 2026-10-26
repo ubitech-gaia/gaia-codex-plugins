@@ -1,6 +1,6 @@
 ---
 name: gaia-automation
-description: 'Use when Codex needs live Gaia feedback through the Gaia extension, with or without a repository project binding.'
+description: 'Use for live Gaia work and setting up or checking independent environment connections through Gaia MCP, with or without a repository project binding.'
 ---
 
 # Gaia Automation
@@ -22,7 +22,7 @@ Use this skill whenever Codex needs live Gaia data or actions through the Gaia e
 Before using Gaia MCP tools:
 
 1. Check whether root-level `gaia.config.json` exists.
-2. If it exists, use the environment resolver below. Honor an explicit environment name; otherwise use its default. Never substitute another target when the selected connection or project binding is missing.
+2. If it exists, use the environment resolver below. Honor an explicit environment name; otherwise use its default. Never substitute another target when the selected connection or project binding is missing. For connection setup, login, or status requests, follow [environment connections](references/environment-connections.md) and use the bundled `scripts/connections.mjs` helper.
 3. If it does not exist, enter unbound general mode. Use the Gaia extension's `gaia` MCP server and inspect the exposed Gaia tools before trying browser login, direct database access, or asking the user for a project binding.
 4. For a discussion URL or topic id, call `discussion_topic_get` with the extracted `topicId` and `includeComments: true`, omitting `projectId` when no project context is needed. For platform discussion discovery, call `discussion_topic_list` with `scope: "global"`. Project discussion lists use `scope: "project"` (the default) and require a trusted `projectId`.
 5. Call `gaia_mcp_skill_catalog` without `projectId` to discover native tools and inspect `usage.projectOptionalTools`. `gaia_capability_inventory_get` also works without a project. Platform tasks use `platform_task_*` without `projectId`; project tasks use `project_task_*` with the target project's trusted id. Resource-specific permissions apply in both modes.
@@ -69,6 +69,9 @@ Authenticate each distinct configured MCP connection independently. Config entri
 connections. Check the actual endpoint matches the resolved origin plus `/api/mcp/gaia`; use the
 resolved server name in login/setup/recovery commands. Multiple projects on one origin may share
 a server; one server must never route to different origins.
+
+For setup and per-environment connection status, use [environment connections](references/environment-connections.md).
+Stored OAuth credentials are not proof of live connectivity or access to a particular project.
 
 For a cross-environment transfer:
 
