@@ -152,10 +152,36 @@ as a project-spec update.
 8. For evals, delivery process, project tasks, milestones, project versions, branches, environment promotion, governance, document folders, workflows, UI layouts, and agent/config operations, use the native tools exposed by the selected server whenever they are available. Pass the active project id for project-scoped tools.
 9. For workflow end-to-end checks, prefer `workflow_run_with_context_seed` when the workflow expects assistant/tool input. Inspect results with `workflow_run_get`, `workflow_run_logs_get`, and `workflow_action_request_list`; use `workflow_action_request_ui_layout_get` to verify custom human-in-the-loop layouts.
 10. If only `project_spec_*` tools are visible in Codex, treat the MCP binding as stale or incomplete: confirm that the server uses the queryless `/api/mcp/gaia` URL, refresh OAuth with `codex mcp login gaia`, and retry the catalogue once before reporting the remaining mismatch.
-11. Use Browser or Playwright tools for UI and canvas interactions when needed, after trying the native Gaia MCP operation for semantic reads.
+11. Before Browser, Playwright, or computer use, follow the operation-level fallback check below. Prefer native Gaia MCP for semantic reads and mutations.
 12. For production support and debugging, call `read_operational_logs` with a trusted active project id, the user's IANA `timeZone`, and either `latestMinutes`/`latestHours` or a `start` and `end` window. Offset-free date-times are interpreted in the supplied time zone.
 
 ## Tool Notes
+
+### Operation-level fallback check
+
+Before using computer interaction for a Gaia task:
+
+1. Name the exact operation required, such as posting a discussion reply, exporting a transcript,
+   adding a conversation participant, creating a dashboard page, or creating a tab within a page.
+2. Inspect the selected server's current catalog and use `gaia_capability_inventory_get` for that
+   operation. Check tool arguments and project-spec alternatives; the absence of a guessed tool
+   name does not establish a gap. Use `discussion_topic_*` / `discussion_comment_*`,
+   `conversation_*`, and `dashboard_*` when exposed. Dashboard `pageId` identifies a page; custom
+   tabs belong to that page and widgets select them through `spec.dashboardTab`. The historical
+   `tabs` collection returned by page listing contains pages, not the custom tabs inside them.
+3. If the catalog is stale, refresh it once using the connection-recovery procedure. Resolve
+   authentication and trusted project context before concluding a capability is unavailable.
+   A denied operation must not be retried through the UI to evade its permissions or policy.
+4. Before falling back, give a concise explanation naming the missing operation and the evidence:
+   no deployed tool, a specific unsupported argument, or a visual/interaction check that needs a
+   browser. Example: “The connected catalog does not expose dashboard_tab_create; I’ll use the
+   New tab dialog.” Do not merely say MCP is limited or unavailable.
+5. Use computer interaction only for that remaining step, then return to native tools for subsequent
+   supported operations. For visual verification, state what rendering or interaction is being
+   checked. Existing user authorization remains valid; this explanation is not another approval gate.
+
+Tool availability depends on the deployed server. Do not claim these operations exist until they
+appear in its catalog; updating this guidance alone does not deploy them.
 
 MCP tool schemas come from the connected Gaia server, not this plugin. A server-side tool addition does not require a plugin schema change. After deploying new server capabilities, refresh the MCP connection/catalog (or start a new Codex task) and check the available tools before using them. Updating this plugin supplies workflow guidance; it does not deploy server code or make an unavailable tool callable.
 
