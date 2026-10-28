@@ -169,9 +169,17 @@ Before using computer interaction for a Gaia task:
    `conversation_*`, and `dashboard_*` when exposed. Dashboard `pageId` identifies a page; custom
    tabs belong to that page and widgets select them through `spec.dashboardTab`. The historical
    `tabs` collection returned by page listing contains pages, not the custom tabs inside them.
+   Inventory tags such as `gaia-platform-tool` (formerly `internal-only`) describe Gaia platform
+   tool scope, not absence from MCP. An operation exposed by the connected catalog is callable
+   subject to its resource permissions, regardless of that legacy tag.
 3. If the catalog is stale, refresh it once using the connection-recovery procedure. Resolve
    authentication and trusted project context before concluding a capability is unavailable.
    A denied operation must not be retried through the UI to evade its permissions or policy.
+   Inspect `structuredContent.result` as well as the text summary. A successful call with
+   `result: null` is a missing payload, not evidence that there are no records or that the tool is
+   unavailable. An explicit empty collection with pagination metadata is a valid empty result.
+   Diagnose null results as a response-contract failure; if a permitted browser fallback is needed,
+   name that exact failure instead of claiming conversation access is internal-only.
 4. Before falling back, give a concise explanation naming the missing operation and the evidence:
    no deployed tool, a specific unsupported argument, or a visual/interaction check that needs a
    browser. Example: “The connected catalog does not expose dashboard_tab_create; I’ll use the
