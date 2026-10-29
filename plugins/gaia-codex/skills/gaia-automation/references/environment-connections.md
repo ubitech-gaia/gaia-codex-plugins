@@ -4,6 +4,15 @@ Use this workflow when asked to configure, authenticate, check, or recover named
 The plugin supplies the workflow; Codex owns each named MCP connection and its OAuth credentials.
 Keep one stable server name per connection. Do not change one server's URL to switch environments.
 
+Install the plugin once for all instances. Template 1.3.0 reserves `gaia` for `https://thegaia.ai`
+and generates stable origin-specific names for other instances. Read the actual configured name;
+do not derive or assume it for existing workspaces. If a legacy customer workspace shadows hosted
+`gaia`, explain the ambiguity. When asked to migrate it, rename only that customer's connection
+and its nested tool sections, update the matching `mcpServer` binding and local login instructions,
+preserve approval settings and other connections, then authenticate and verify the new name.
+Renaming does not prove or fix a server-side OAuth validation failure. Ordinary template updates
+preserve existing names and do not perform this migration.
+
 ## Inspect and set up
 
 Read `gaia.config.json`. Use `scripts/connections.mjs` relative to this skill directory, or the
