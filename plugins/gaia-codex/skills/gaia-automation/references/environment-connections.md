@@ -59,17 +59,24 @@ the helper does not read tokens or call Gaia directly.
 
 After setup, use the native MCP tools on **each selected server**:
 
-1. Confirm the helper reports the exact expected queryless endpoint. Refresh/reload the MCP catalog
-   if a newly registered server is not exposed. If it remains unavailable, report verification as
-   pending and request a new Codex task; do not call another server with the same tool name.
+1. Confirm the helper reports the exact expected queryless endpoint. Distinguish a server absent
+   from this chat's tool catalog from a server whose initialization explicitly failed. Reload once
+   for an absent catalog; suggest one new chat only if that runtime cannot load a newly added
+   connection and no authentication failure is reported. Never use a new chat as the remedy for
+   `Auth required` during initialization. Do not call another server with the same tool name.
 2. Call `gaia_mcp_skill_catalog` on that server without a project ID to check Gaia connectivity.
 3. For a configured project ID, call `project_spec_get_current` on the same server with that exact
    ID. Respect existing tool approval policy; on legacy projects this baseline may seed canonical
    bindings/snapshots. Check any returned project identity against the binding. Without a project
    ID, report platform access only and project access as unbound.
-4. On OAuth challenges/401/invalid_grant, run `login` for that environment and retry once after
-   browser consent. Permission denials or missing projects require account/project correction,
-   not repeated login. Network/TLS failures require endpoint/trust repair, never disabled TLS checks.
+4. On OAuth challenges/401/invalid_grant, check whether login and a native retry already failed
+   in the available conversation history or the user's report. If not, authenticate that environment
+   once and retry after consent. If initialization still fails after successful login, stop this
+   recovery cycle, including across chats. Report the server name, expected endpoint, exact failure,
+   and completed login/retry steps; direct the instance administrator to the server's
+   `gaia_mcp_oauth_rejected` diagnostic reason and timestamp. Do not claim a particular token or
+   network cause without that evidence. Permission denials or missing projects require account/project
+   correction. Network/TLS failures require endpoint/trust repair, never disabled TLS checks.
 
 Report a row per environment with server, expected endpoint, credential status, platform access,
 and project access (`verified`, `denied`, `unbound`, or `not checked`, with a concise reason).

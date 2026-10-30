@@ -28,7 +28,7 @@ Before using Gaia MCP tools:
 5. Call `gaia_mcp_skill_catalog` without `projectId` to discover native tools and inspect `usage.projectOptionalTools`. `gaia_capability_inventory_get` also works without a project. Platform tasks use `platform_task_*` without `projectId`; project tasks use `project_task_*` with the target project's trusted id. Resource-specific permissions apply in both modes.
 6. For named local environments, use the resolved entry. For legacy local work, use `localGaiaBaseUrl` or `https://gaia.localhost:1443`, `localProjectId`, and `gaia-local`. Local platform calls may omit the project ID; project work must have a trusted local project ID.
 7. Confirm the selected MCP server points at the matching queryless `/api/mcp/gaia` endpoint.
-8. If MCP is not connected, tell the user to run:
+8. Register a server only when it is missing from configuration, using the selected name and origin. Existing connection failures follow **Connection Recovery**; do not add or repoint another server. For a missing hosted connection:
 
 ```bash
 codex mcp add gaia --url "https://thegaia.ai/api/mcp/gaia"
@@ -115,15 +115,15 @@ Without a retained baseline, preview an initial full export and resolve differen
 
 For named environments, use the resolved `mcpServer` in all connection and recovery commands below. The literal `gaia` examples refer to the legacy default only. Never rewrite a working server to point at another environment.
 
-Treat an OAuth challenge, `401`, `invalid_grant`, or an unavailable Gaia tool catalogue as a recoverable authentication event before describing the Gaia connection as lost.
+Distinguish an absent tool catalogue from an explicit MCP initialization/authentication failure. Follow [environment connections](references/environment-connections.md). A missing catalogue alone does not establish that OAuth needs renewal. A successful login followed by `Auth required` is an unresolved initialization failure, not a reason to repeat login or start another chat.
 
 A `projectId` schema-validation error on a platform tool is a capability mismatch, not an OAuth failure. Confirm the queryless endpoint and reload the MCP catalog once. If the tool still requires `projectId`, report that the deployed Gaia server needs the project-optional MCP update. Do not invent a project binding or repeatedly reauthenticate. Updating this plugin alone cannot change server schemas.
 
 1. Run `codex mcp get gaia` to confirm the existing server configuration. Do not remove a correctly configured server as the first recovery step.
-2. If the server exists, run `codex mcp login gaia`, tell the user that Gaia browser approval is needed, and wait for that login flow to finish. If shell execution is unavailable, give the user that exact command instead.
-3. After a successful login, retry the original Gaia MCP call once in the same task. Codex 0.148.0 and newer can recover the MCP server after OAuth reauthentication without restarting. If the installed Codex is older, recommend upgrading; when the current task still retains the stale connection, ask the user to start a new task after login.
+2. For an authentication failure, check available history and the user's report for a completed login-and-retry attempt. If none exists, run `codex mcp login gaia` for the selected connection and wait for browser consent. If shell execution is unavailable, give the user that command. Do not repeat a failed recovery cycle merely because this is a new chat.
+3. After successful login, retry the original Gaia MCP call once. If initialization still reports an authentication failure, stop and report it. For a newly added connection absent from the catalog with no explicit auth failure, reload once; suggest a new chat only when the current runtime cannot load it.
 4. Use `codex mcp add gaia --url "https://thegaia.ai/api/mcp/gaia"` only when the `gaia` server is missing or its URL is incorrect.
-5. If the retry fails with the same authentication error, report the exact failed recovery step and required user action. Do not fall back to browser scraping or direct database access for data the Gaia MCP should provide.
+5. If the retry fails with the same authentication error, report the selected server, endpoint, exact error and completed recovery steps. The instance administrator should inspect the server-side `gaia_mcp_oauth_rejected` reason and timestamp; older deployments may need the diagnostic update. Do not infer the underlying cause from a generic 401. Do not fall back to browser scraping or direct database access for data the Gaia MCP should provide.
 
 ## Freshness and Patch Base Discipline
 
@@ -151,7 +151,7 @@ as a project-spec update.
 7. Use `gaia_mcp_skill_catalog` to understand available tool groups in either mode.
 8. For evals, delivery process, project tasks, milestones, project versions, branches, environment promotion, governance, document folders, workflows, UI layouts, and agent/config operations, use the native tools exposed by the selected server whenever they are available. Pass the active project id for project-scoped tools.
 9. For workflow end-to-end checks, prefer `workflow_run_with_context_seed` when the workflow expects assistant/tool input. Inspect results with `workflow_run_get`, `workflow_run_logs_get`, and `workflow_action_request_list`; use `workflow_action_request_ui_layout_get` to verify custom human-in-the-loop layouts.
-10. If only `project_spec_*` tools are visible in Codex, treat the MCP binding as stale or incomplete: confirm that the server uses the queryless `/api/mcp/gaia` URL, refresh OAuth with `codex mcp login gaia`, and retry the catalogue once before reporting the remaining mismatch.
+10. If only `project_spec_*` tools are visible in Codex, confirm the queryless `/api/mcp/gaia` URL and reload the catalogue once before reporting the remaining capability mismatch. Renew OAuth only when authentication failed, following the bounded recovery procedure above.
 11. Before Browser, Playwright, or computer use, follow the operation-level fallback check below. Prefer native Gaia MCP for semantic reads and mutations.
 12. For production support and debugging, call `read_operational_logs` with a trusted active project id, the user's IANA `timeZone`, and either `latestMinutes`/`latestHours` or a `start` and `end` window. Offset-free date-times are interpreted in the supplied time zone.
 
